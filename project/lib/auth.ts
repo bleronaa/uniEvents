@@ -13,15 +13,20 @@ interface AuthState {
   user: User | null;
   setAuth: (token: string, user: User) => void;
   logout: () => void;
+  getAuthHeader: () => { Authorization: string } | undefined;
 }
 
 export const useAuth = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       token: null,
       user: null,
       setAuth: (token, user) => set({ token, user }),
       logout: () => set({ token: null, user: null }),
+      getAuthHeader: () => {
+        const token = get().token;
+        return token ? { Authorization: `Bearer ${token}` } : undefined;
+      },
     }),
     {
       name: 'auth-storage',

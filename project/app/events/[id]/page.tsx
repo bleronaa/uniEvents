@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Users, MapPin, Tag, User, Share2 } from "lucide-react";
+import { CalendarDays, Users, MapPin, Tag, User, Share2, Clock, Building } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -23,53 +23,64 @@ interface Event {
   };
 }
 
-export default function EventPage({ params }: { params: { id: string } }) {
+export default function EventDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, getAuthHeader } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
+  const [registrationCount, setRegistrationCount] = useState(0);
 
   useEffect(() => {
     async function fetchEvent() {
       try {
-        setLoading(true);
-        const res = await fetch(`/api/events/${params.id}`); // Fetch single event
-        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-        
+        const res = await fetch(`/api/events/${params.id}`);
+        if (!res.ok) throw new Error("Failed to fetch event");
         const data = await res.json();
-        setEvent(data);  // ✅ Update event state
+        setEvent(data);
       } catch (error) {
-        console.error("Error fetching event:", error);
+        toast.error("Failed to load event details");
+        router.push("/");
       } finally {
-        setLoading(false); // ✅ Ensure loading state is updated
+        setLoading(false);
       }
     }
-  
+
     if (params.id) {
       fetchEvent();
     }
-  }, [params.id]);
+  }, [params.id, router]);
 
   async function handleRegister() {
     if (!user) {
       router.push("/login");
       return;
     }
-
+  
+    const authHeader = getAuthHeader();
+    console.log("Auth Header:", authHeader);
+  
+    if (!authHeader) {
+      toast.error("Authentication required");
+      router.push("/login");
+      return;
+    }
+  
     setRegistering(true);
     try {
       const res = await fetch("/api/registrations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          ...authHeader,  // Make sure this contains { Authorization: 'Bearer <token>' }
         },
         body: JSON.stringify({ eventId: event?._id }),
       });
-
+  
+      console.log("Response Status:", res.status);
       const data = await res.json();
-
+      console.log("Response Data:", data);
+  
       if (!res.ok) {
         throw new Error(data.error || "Failed to register");
       }
@@ -82,6 +93,7 @@ export default function EventPage({ params }: { params: { id: string } }) {
       setRegistering(false);
     }
   }
+  
 
   async function handleShare() {
     try {
@@ -91,7 +103,6 @@ export default function EventPage({ params }: { params: { id: string } }) {
         url: window.location.href,
       });
     } catch (error) {
-      // Fallback to copying the URL
       navigator.clipboard.writeText(window.location.href);
       toast.success("Event link copied to clipboard");
     }
@@ -102,7 +113,7 @@ export default function EventPage({ params }: { params: { id: string } }) {
       <div className="container mx-auto py-8 px-4">
         <Card>
           <CardContent className="p-8">
-            <div className="animate-pulse space-y-4">
+            <div className="animate-pulse space-y-6">
               <div className="h-8 bg-muted rounded w-3/4"></div>
               <div className="h-4 bg-muted rounded w-1/2"></div>
               <div className="space-y-2">
@@ -120,11 +131,12 @@ export default function EventPage({ params }: { params: { id: string } }) {
 
   const eventDate = new Date(event.date);
   const isUpcoming = eventDate > new Date();
+  const spotsLeft = event.capacity - registrationCount;
 
   return (
     <div className="container mx-auto py-8 px-4">
       <Card className="overflow-hidden">
-        <div className="bg-primary/10 p-8">
+        <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-8">
           <div className="flex flex-col gap-4">
             <div className="flex justify-between items-start flex-wrap gap-4">
               <div>
@@ -140,8 +152,8 @@ export default function EventPage({ params }: { params: { id: string } }) {
                   Share
                 </Button>
                 {isUpcoming && user && (
-                  <Button onClick={handleRegister} disabled={registering}>
-                    {registering ? "Registering..." : "Register for Event"}
+                  <Button onClick={handleRegister} disabled={registering || spotsLeft <= 0}>
+                    {registering ? "Registering..." : spotsLeft <= 0 ? "Event Full" : "Register Now"}
                   </Button>
                 )}
               </div>
@@ -151,43 +163,58 @@ export default function EventPage({ params }: { params: { id: string } }) {
 
         <CardContent className="p-8">
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="md:col-span-2 space-y-6">
+            <div className="md:col-span-2 space-y-8">
               <div>
-                <h2 className="text-xl font-semibold mb-3">About this Event</h2>
-                <p className="text-muted-foreground whitespace-pre-wrap">{event.description}</p>
+                <h2 className="text-xl font-semibold mb-4">About this Event</h2>
+                <div className="prose max-w-none">
+                  <p className="text-muted-foreground whitespace-pre-wrap">{event.description}</p>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-4">
+              <div className="space-y-6">
                 <h2 className="text-xl font-semibold">Event Details</h2>
-                <div className="grid gap-4">
-                  <div className="flex items-center gap-3">
-                    <CalendarDays className="h-5 w-5 text-primary" />
+                <div className="grid gap-6">
+                  <div className="flex items-start gap-3">
+                    <CalendarDays className="h-5 w-5 text-primary mt-1" />
                     <div>
-                      <p className="font-medium">Date and Time</p>
+                      <p className="font-medium">Date</p>
                       <p className="text-muted-foreground">
-                        {format(eventDate, "EEEE, MMMM d, yyyy 'at' h:mm a")}
+                        {format(eventDate, "EEEE, MMMM d, yyyy")}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3">
-                    <MapPin className="h-5 w-5 text-primary" />
+                  <div className="flex items-start gap-3">
+                    <Clock className="h-5 w-5 text-primary mt-1" />
+                    <div>
+                      <p className="font-medium">Time</p>
+                      <p className="text-muted-foreground">
+                        {format(eventDate, "h:mm a")}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <Building className="h-5 w-5 text-primary mt-1" />
                     <div>
                       <p className="font-medium">Location</p>
                       <p className="text-muted-foreground">{event.location}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <Users className="h-5 w-5 text-primary" />
+                  <div className="flex items-start gap-3">
+                    <Users className="h-5 w-5 text-primary mt-1" />
                     <div>
                       <p className="font-medium">Capacity</p>
-                      <p className="text-muted-foreground">{event.capacity} attendees</p>
+                      <p className="text-muted-foreground">
+                        {event.capacity} attendees maximum
+                        {spotsLeft > 0 && ` (${spotsLeft} spots remaining)`}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <Tag className="h-5 w-5 text-primary" />
+                  <div className="flex items-start gap-3">
+                    <Tag className="h-5 w-5 text-primary mt-1" />
                     <div>
                       <p className="font-medium">Category</p>
                       <p className="text-muted-foreground">{event.category}</p>
@@ -198,7 +225,7 @@ export default function EventPage({ params }: { params: { id: string } }) {
             </div>
 
             <div>
-              <Card>
+              <Card className="sticky top-4">
                 <CardHeader>
                   <CardTitle>Quick Information</CardTitle>
                   <CardDescription>Important details about the event</CardDescription>
@@ -207,15 +234,47 @@ export default function EventPage({ params }: { params: { id: string } }) {
                   <div className="flex items-center justify-between">
                     <span>Status</span>
                     <span className={`px-2 py-1 rounded-full text-sm ${
-                      isUpcoming ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      isUpcoming 
+                        ? spotsLeft > 0 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                        : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {isUpcoming ? 'Upcoming' : 'Past Event'}
+                      {isUpcoming 
+                        ? spotsLeft > 0 
+                          ? 'Registration Open' 
+                          : 'Fully Booked'
+                        : 'Past Event'}
                     </span>
                   </div>
-                  {!user && (
-                    <Button className="w-full" onClick={() => router.push('/login')}>
-                      Login to Register
-                    </Button>
+
+                  <div className="flex items-center justify-between">
+                    <span>Capacity</span>
+                    <span className="text-sm">
+                      {registrationCount}/{event.capacity}
+                    </span>
+                  </div>
+
+                  {isUpcoming && (
+                    <div className="pt-4">
+                      {user ? (
+                        <Button 
+                          className="w-full" 
+                          onClick={handleRegister}
+                          disabled={registering || spotsLeft <= 0}
+                        >
+                          {registering 
+                            ? "Registering..." 
+                            : spotsLeft <= 0 
+                              ? "Event Full" 
+                              : "Register Now"}
+                        </Button>
+                      ) : (
+                        <Button className="w-full" onClick={() => router.push('/login')}>
+                          Login to Register
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </Card>
