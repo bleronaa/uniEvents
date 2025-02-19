@@ -7,7 +7,7 @@ import './globals copy.css'
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Campus Events",
+  title: "UniEvent",
   description: "Your campus event management platform",
 };
 

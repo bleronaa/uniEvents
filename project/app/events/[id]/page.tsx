@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CalendarDays, Users, MapPin, Tag, User, Share2, Clock, Building } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import Link from "next/link";
+import { Footer } from "@/components/footer";
 
 interface Event {
   _id: string;
@@ -30,6 +32,7 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
   const [registrationCount, setRegistrationCount] = useState(0);
+  const [otherEvents, setOtherEvents]=useState<Event[]>([]);
 
   useEffect(() => {
     async function fetchEvent() {
@@ -46,8 +49,22 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
       }
     }
 
+    async function fetchOtherEvents (){
+      try{
+        const res= await fetch(`/api/events`);
+        if(!res.ok) throw new Error ("Failed to fetch events");
+        const data:Event[]=await res.json();
+
+        //Exclude the current event
+        setOtherEvents(data.filter((e) => e._id !== params.id));
+      } catch(error){
+        console.error("Failed to load other events:", error)
+      }
+    }
+
     if (params.id) {
       fetchEvent();
+      fetchOtherEvents();
     }
   }, [params.id, router]);
 
@@ -134,6 +151,7 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
   const spotsLeft = event.capacity - registrationCount;
 
   return (
+    <>
     <div className="container mx-auto py-8 px-4">
       <Card className="overflow-hidden">
         <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-8">
@@ -143,13 +161,13 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
                 <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <User className="h-4 w-4" />
-                  <span>Organized by {event.organizer.name}</span>
+                  <span>Organizuar nga {event.organizer.name}</span>
                 </div>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleShare}>
                   <Share2 className="h-4 w-4 mr-2" />
-                  Share
+                  Ndaje
                 </Button>
                 {isUpcoming && user && (
                   <Button onClick={handleRegister} disabled={registering || spotsLeft <= 0}>
@@ -165,19 +183,19 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
           <div className="grid md:grid-cols-3 gap-8">
             <div className="md:col-span-2 space-y-8">
               <div>
-                <h2 className="text-xl font-semibold mb-4">About this Event</h2>
+                <h2 className="text-xl font-semibold mb-4">Rreth këtij eventi</h2>
                 <div className="prose max-w-none">
                   <p className="text-muted-foreground whitespace-pre-wrap">{event.description}</p>
                 </div>
               </div>
 
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold">Event Details</h2>
+                <h2 className="text-xl font-semibold">Detajet e eventit</h2>
                 <div className="grid gap-6">
                   <div className="flex items-start gap-3">
                     <CalendarDays className="h-5 w-5 text-primary mt-1" />
                     <div>
-                      <p className="font-medium">Date</p>
+                      <p className="font-medium">Data</p>
                       <p className="text-muted-foreground">
                         {format(eventDate, "EEEE, MMMM d, yyyy")}
                       </p>
@@ -187,7 +205,7 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
                   <div className="flex items-start gap-3">
                     <Clock className="h-5 w-5 text-primary mt-1" />
                     <div>
-                      <p className="font-medium">Time</p>
+                      <p className="font-medium">Koha</p>
                       <p className="text-muted-foreground">
                         {format(eventDate, "h:mm a")}
                       </p>
@@ -197,7 +215,7 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
                   <div className="flex items-start gap-3">
                     <Building className="h-5 w-5 text-primary mt-1" />
                     <div>
-                      <p className="font-medium">Location</p>
+                      <p className="font-medium">Lokacioni</p>
                       <p className="text-muted-foreground">{event.location}</p>
                     </div>
                   </div>
@@ -205,10 +223,10 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
                   <div className="flex items-start gap-3">
                     <Users className="h-5 w-5 text-primary mt-1" />
                     <div>
-                      <p className="font-medium">Capacity</p>
+                      <p className="font-medium">Kapaciteti</p>
                       <p className="text-muted-foreground">
-                        {event.capacity} attendees maximum
-                        {spotsLeft > 0 && ` (${spotsLeft} spots remaining)`}
+                        {event.capacity} maksimumi i pjesëmarrësve
+                        {spotsLeft > 0 && ` (${spotsLeft} vende të lira)`}
                       </p>
                     </div>
                   </div>
@@ -216,7 +234,7 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
                   <div className="flex items-start gap-3">
                     <Tag className="h-5 w-5 text-primary mt-1" />
                     <div>
-                      <p className="font-medium">Category</p>
+                      <p className="font-medium">Kategoria</p>
                       <p className="text-muted-foreground">{event.category}</p>
                     </div>
                   </div>
@@ -227,12 +245,12 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
             <div>
               <Card className="sticky top-4">
                 <CardHeader>
-                  <CardTitle>Quick Information</CardTitle>
-                  <CardDescription>Important details about the event</CardDescription>
+                  <CardTitle>Informacion i shpejtë</CardTitle>
+                  <CardDescription>Detaje të rëndësishme për eventin</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span>Status</span>
+                    <span>Gjendja</span>
                     <span className={`px-2 py-1 rounded-full text-sm ${
                       isUpcoming 
                         ? spotsLeft > 0 
@@ -242,14 +260,14 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
                     }`}>
                       {isUpcoming 
                         ? spotsLeft > 0 
-                          ? 'Registration Open' 
-                          : 'Fully Booked'
-                        : 'Past Event'}
+                          ? 'Regjistrimi i hapur' 
+                          : 'Plotësisht i rezervuar'
+                        : 'Event i shkuar'}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span>Capacity</span>
+                    <span>Kapaciteti</span>
                     <span className="text-sm">
                       {registrationCount}/{event.capacity}
                     </span>
@@ -264,10 +282,10 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
                           disabled={registering || spotsLeft <= 0}
                         >
                           {registering 
-                            ? "Registering..." 
+                            ? "Duke u regjitruar..." 
                             : spotsLeft <= 0 
-                              ? "Event Full" 
-                              : "Register Now"}
+                              ? "Eventi plot" 
+                              : "Regjistrohu tani"}
                         </Button>
                       ) : (
                         <Button className="w-full" onClick={() => router.push('/login')}>
@@ -282,6 +300,41 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
           </div>
         </CardContent>
       </Card>
+
+      {/* other event Section */}
+      {otherEvents.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold mb-4">Evente Tjera</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {otherEvents.map((otherEvent)=>(
+                <Card key={otherEvent._id} className="p-4">
+                <h3 className="text-lg font-semibold">{otherEvent.title}</h3>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                <CalendarDays className="h-4 w-4" />
+                <p className="text-sm text-muted-foreground">
+                  {format(new Date(otherEvent.date), "MMMM d, yyyy")}
+                </p>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <p className="text-sm text-muted-foreground">{otherEvent.location}</p>
+                </div>
+                <Button variant="outline" asChild className="mt-4 w-full">
+                <Link href={`/events/${otherEvent._id}`} className="text-primary mt-2 inline-block">
+                  Shiko detajet →
+                </Link>
+                </Button>
+              
+              </Card>
+            ))}
+
+          </div>
+
+        </div>
+      )}
+    
     </div>
+    <Footer/>
+</>
   );
 }

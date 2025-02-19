@@ -18,7 +18,7 @@ export function Navbar() {
   
   return (
     <div className="border-b">
-      <div className="container mx-auto px-4 py-3">
+      <div className="container mx-auto px-4 py-2">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Image src="/assets/images/logo.png" width={158} height={58} alt="UniEvents logo"/>
@@ -29,7 +29,7 @@ export function Navbar() {
               <NavigationMenuItem>
                 <Link href="/" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Events
+                    Eventet
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
@@ -38,14 +38,14 @@ export function Navbar() {
                   <NavigationMenuItem>
                     <Link href="/create" legacyBehavior passHref>
                       <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                        Create Event
+                        Krijo event
                       </NavigationMenuLink>
                     </Link>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
                     <Link href="/registrations" legacyBehavior passHref>
                       <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                        My Registrations
+                        Regjistrimet e mia
                       </NavigationMenuLink>
                     </Link>
                   </NavigationMenuItem>
@@ -62,7 +62,7 @@ export function Navbar() {
                 </span>
                 <Button variant="outline" size="sm" onClick={() => logout()}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  Logout
+                  Dil
                 </Button>
               </>
             ) : (
@@ -70,13 +70,13 @@ export function Navbar() {
                 <Button variant="outline" size="sm" asChild>
                   <Link href="/login">
                     <LogIn className="h-4 w-4 mr-2" />
-                    Login
+                    Kyqu
                   </Link>
                 </Button>
                 <Button size="sm" asChild>
                   <Link href="/register">
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Register
+                    Regjistrohu
                   </Link>
                 </Button>
               </>

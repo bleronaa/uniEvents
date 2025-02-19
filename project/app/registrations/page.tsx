@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarDays, MapPin, Users } from "lucide-react";
 import { format } from "date-fns";
+import { Footer } from "@/components/footer";
 
 interface Registration {
   _id: string;
@@ -133,6 +134,7 @@ export default function RegistrationsPage() {
   }
 
   return (
+    <>
     <div className="container mx-auto py-8 px-4">
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">My Registrations</h1>
@@ -182,7 +184,8 @@ export default function RegistrationsPage() {
           })}
         </div>
       </div>
-
     </div>
+    <Footer/>
+    </>
   );
 }
