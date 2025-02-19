@@ -14,6 +14,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Footer } from "@/components/footer";
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -71,36 +72,37 @@ export default function CreateEventPage() {
   }
 
   return (
+    <>
     <div className="container mx-auto flex items-center justify-center min-h-[calc(100vh-4rem)] py-8">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle>Create New Event</CardTitle>
-          <CardDescription>Fill in the details for your new event</CardDescription>
+          <CardTitle>Krijo një event të ri</CardTitle>
+          <CardDescription>Plotësoni detajet për eventin tuaj të ri</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Event Title</Label>
+              <Label htmlFor="title">Titulli i eventit</Label>
               <Input
                 id="title"
                 name="title"
-                placeholder="Enter event title"
+                placeholder="Shkruani titullin e eventit"
                 required
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Përshkrimi</Label>
               <Textarea
                 id="description"
                 name="description"
-                placeholder="Describe your event"
+                placeholder="Përshkruani eventin tuaj"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label>Data</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -111,7 +113,7 @@ export default function CreateEventPage() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : "Select date"}
+                    {date ? format(date, "PPP") : "Zgjedhni datën"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -126,43 +128,45 @@ export default function CreateEventPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">Lokacioni</Label>
               <Input
                 id="location"
                 name="location"
-                placeholder="Event location"
+                placeholder="Lokacioni i eventit"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="capacity">Capacity</Label>
+              <Label htmlFor="capacity">Kapaciteti</Label>
               <Input
                 id="capacity"
                 name="capacity"
                 type="number"
                 min="1"
-                placeholder="Maximum number of attendees"
+                placeholder="Numri maksimal i pjesëmarrësve"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Kategoria</Label>
               <Input
                 id="category"
                 name="category"
-                placeholder="Event category"
+                placeholder="Kategoria e eventit"
                 required
               />
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating..." : "Create Event"}
+              {loading ? "Duke u krijuar..." : "Krijo eventin"}
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
+    <Footer/>
+    </>
   );
 }
