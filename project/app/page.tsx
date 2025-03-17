@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Users, MapPin } from "lucide-react";
+import { CalendarDays, Users, MapPin, Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -24,12 +24,15 @@ interface Event {
   };
 }
 
+const categories = ["Inxh.Kompjuterike", "Inxh.Mekanike"];
+
 export default function Home() {
   const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
   useEffect(() => {
     async function fetchEvents() {
       try {
@@ -47,7 +50,8 @@ export default function Home() {
   }, []);
 
   const filteredEvents = events.filter(event => 
-    event.title.toLowerCase().includes(searchQuery.toLowerCase())
+    event.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    (selectedCategory === "All" || event.category === selectedCategory)
   );
 
   return (
@@ -57,7 +61,7 @@ export default function Home() {
           <div className="flex flex-col justify-center gap-8">
             <h1 className="h1-bold">Mikpritës, Ndërlidhës dhe Inspirues</h1>
             <p className="p-regular-20">
-            Organizo dhe eksploro aktivitete që lidhin studentët, klubet dhe fakultetet, duke sjellë ide dhe mundësi të reja për të gjithë komunitetin universitar.
+              Organizo dhe eksploro aktivitete që lidhin studentët, klubet dhe fakultetet, duke sjellë ide dhe mundësi të reja për të gjithë komunitetin universitar.
             </p>
             <Button size="lg" asChild className="button w-full sm:w-fit">
               <Link href="#events">Zbulo më Shumë</Link>
@@ -79,13 +83,24 @@ export default function Home() {
             <div className="flex justify-between items-center w-full max-w-3xl">
               <h1 className="text-3xl font-bold">Të gjitha eventet</h1>
               {user && (
-                <Button asChild>
-                  <Link href="/create">Krijo event</Link>
-                </Button>
+                <div className="flex gap-4">
+                  <Button asChild>
+                    <Link href="/create">Krijo event</Link>
+                  </Button>
+                  <select
+                    className="border border-gray-300 rounded-md p-2"
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                  >
+                    <option value="All">Të gjitha kategoritë</option>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
               )}
             </div>
             
-            {/* Search Input */}
             <input
               type="text"
               placeholder="Kërko event..."
@@ -114,33 +129,35 @@ export default function Home() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                          <div className="flex gap-6">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <CalendarDays className="h-4 w-4" />
-                              <span>{new Date(event.date).toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <MapPin className="h-4 w-4" />
-                              <span>{event.location}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Users className="h-4 w-4" />
-                              <span>Kapaciteti: {event.capacity}</span>
-                            </div>
+                        <div className="flex gap-6">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <CalendarDays className="h-4 w-4" />
+                            <span>{new Date(event.date).toLocaleDateString()}</span>
                           </div>
-                          {/* Centered "Shiko detajet" Button */}
-                          <div className="flex justify-center mt-4">
-                            <Button variant="outline" asChild className="align-center">
-                              <Link href={`/events/${event._id}`}>Shiko detajet</Link>
-                            </Button>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <MapPin className="h-4 w-4" />
+                            <span>{event.location}</span>
                           </div>
-                        </CardContent>
-
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Users className="h-4 w-4" />
+                            <span>Kapaciteti: {event.capacity}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Menu className="h-4 w-4" />
+                            <span>Kategoria: {event.category}</span>
+                          </div>
+                        </div>
+                        <div className="flex justify-center mt-4">
+                          <Button variant="outline" asChild>
+                            <Link href={`/events/${event._id}`}>Shiko detajet</Link>
+                          </Button>
+                        </div>
+                      </CardContent>
                     </Card>
                   ))
                 ) : (
                   <div className="w-full text-center">
-                  <p>Nuk u gjet asnjë event.</p>
+                    <p>Nuk u gjet asnjë event.</p>
                   </div>
                 )}
               </div>
@@ -150,6 +167,5 @@ export default function Home() {
       </section>
       <Footer/>
     </main>
-    
   );
 }
