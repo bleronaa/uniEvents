@@ -23,8 +23,8 @@ UserSchema.pre('save', async function(next) {
 // Create the 3 admin users if they don't exist already
 UserSchema.statics.createAdmins = async function() {
     const admins = [
-        { name: 'Admin ', email: 'blerona.tmava@umib.net', password: 'Umib.2025', role: 'computer_engineering' },
-        { name: 'Admin ', email: 'habib.tmava@umib.net', password: 'Umib.2025', role: 'mechanical_engineering' },
+        { name: 'Admin ', email: 'blerona.tmava@umib.net', password: 'Umib.2025', role: 'admin' },
+        { name: 'Admin ', email: 'habib.tmava@umib.net', password: 'Umib.2025', role: 'admin' },
         { name: 'SuperAdmin', email: 'bleronatmava12@gmail.com', password: 'Umib.2025', role: 'staff' }
     ];
 
